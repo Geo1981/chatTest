@@ -17,22 +17,22 @@ public class ClientHandler {
 
     public ClientHandler(MyServer myServer, Socket socket) throws IOException {
 
-            this.myServer = myServer;
-            this.socket = socket;
-            this.dis = new DataInputStream(socket.getInputStream());
-            this.dos = new DataOutputStream(socket.getOutputStream());
-            sendMessage("Добрый день." + "\n" + "Пройдите аутентификацию.");
-            Thread thread = new Thread(() -> {
-                try {
-                    authentication();
-                    receiveMessage();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    closeConnection();
-                }
-            });
-            thread.start();
+        this.myServer = myServer;
+        this.socket = socket;
+        this.dis = new DataInputStream(socket.getInputStream());
+        this.dos = new DataOutputStream(socket.getOutputStream());
+        sendMessage("Привет." + "\n" + "Пройдите аутентификацию.");
+        Thread thread = new Thread(() -> {
+            try {
+                authentication();
+                receiveMessage();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                closeConnection();
+            }
+        });
+        thread.start();
 
 
     }
@@ -62,6 +62,9 @@ public class ClientHandler {
                     sendMessage("Ошибка в логине или в пароле.");
                 }
             }
+            if (message.startsWith("/close")) {
+                closeConnection();
+            }
         }
     }
 
@@ -76,8 +79,18 @@ public class ClientHandler {
     public void receiveMessage() throws IOException {
         while (true) {
             String message = dis.readUTF();
-            if (message.startsWith("/close")) {
-                myServer.sendMessageToClients(nickName + " вышел.");
+            if (message.startsWith("/")) {
+                if (message.startsWith("/close")) {
+                    myServer.sendMessageToClients(nickName + " вышел.");
+                    break;
+                }
+                if (message.startsWith("/nick")) {
+                    String[] arr = message.split("-", 3);
+                    String toNick = arr[1].trim();
+                    String toMessage = arr[2].trim();
+                    myServer.sendMessageToClient(this, toNick, toMessage);
+                }
+                continue;
             }
             myServer.sendMessageToClients(nickName + ": -> " + message);
         }
