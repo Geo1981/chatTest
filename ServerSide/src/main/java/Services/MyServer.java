@@ -1,7 +1,6 @@
 package Services;
 
 
-
 import Services.interfaces.AuthenticationServices;
 import handler.ClientHandler;
 
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MyServer {
-    private static final Integer PORT = 8880;
+    private static final Integer PORT = 8808;
     private AuthenticationServices authenticationServices;
     private List<ClientHandler> handlerList;
 
@@ -21,7 +20,7 @@ public class MyServer {
             authenticationServices = new AuthenticationServicesImpl();
             authenticationServices.start();
             handlerList = new ArrayList<>();
-            while (true){
+            while (true) {
                 System.out.println("Ожидаем подключения.");
                 Socket socket = serverSocket.accept();
                 System.out.println("Клиент подключился.");
@@ -34,24 +33,35 @@ public class MyServer {
         }
     }
 
-    public synchronized boolean nickNameIsBusy (String nickName){
+    public synchronized boolean nickNameIsBusy(String nickName) {
         return handlerList
                 .stream()
                 .anyMatch(clientHandler -> clientHandler.getNickName().equalsIgnoreCase(nickName));
 
     }
 
-    public synchronized void subscribe(ClientHandler clientHandler){
+    public synchronized void subscribe(ClientHandler clientHandler) {
         handlerList.add(clientHandler);
 
     }
 
-    public synchronized void unSubscribe(ClientHandler clientHandler){
+    public synchronized void unSubscribe(ClientHandler clientHandler) {
         handlerList.remove(clientHandler);
     }
 
-    public synchronized void sendMessageToClients(String message){
+    public synchronized void sendMessageToClients(String message) {
         handlerList.forEach(clientHandler -> clientHandler.sendMessage(message));
+    }
+
+    public synchronized void sendMessageToClient(ClientHandler fromNick, String toNick, String message) {
+        for (ClientHandler clientHandler : handlerList) {
+            if (clientHandler.getNickName().equals(toNick)) {
+                clientHandler.sendMessage("От: " + fromNick.getNickName() + " -> " + toNick + ": " + message);
+                fromNick.sendMessage(fromNick.getNickName() + " -> " + toNick + ": " + message);
+                return;
+            }
+        }
+        fromNick.sendMessage("Не возможно отправить личное сообщение " + toNick);
     }
 
     public AuthenticationServices getAuthenticationServices() {

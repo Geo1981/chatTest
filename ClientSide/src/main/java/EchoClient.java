@@ -11,7 +11,7 @@ import java.net.Socket;
 
 public class EchoClient extends JFrame {
     private final String SERVER_ADDRESS = "127.0.0.1";
-    private final Integer SERVER_PORT = 8880;
+    private final Integer SERVER_PORT = 8808;
     private Socket socket;
     private DataInputStream dis;
     private DataOutputStream dos;
@@ -28,13 +28,11 @@ public class EchoClient extends JFrame {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
             dos = new DataOutputStream(socket.getOutputStream());
             dis = new DataInputStream(socket.getInputStream());
-            System.out.println(dis.readUTF());
         } catch (Exception e) {
             e.printStackTrace();
         }
         Thread thread = new Thread(() -> {
             try {
-
                 while (true) {
                     String message = dis.readUTF();
                     if (message.startsWith("/start")) {
@@ -42,22 +40,21 @@ public class EchoClient extends JFrame {
                         break;
                     }
                     chatArea.append(message + "\n");
-
                 }
                 while (true) {
-                    String fromServer = dis.readUTF();
-                    if (fromServer.equalsIgnoreCase("/close")) {
-                        closeConnection();
-                        break;
-                    }
-                    chatArea.append(fromServer + "\n");
+                        String fromServer = dis.readUTF();
+                        if (fromServer.equalsIgnoreCase("/close")) {
+                            closeConnection();
+                            break;
+                        }
+                        chatArea.append(fromServer + "\n");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Ошибка соединения c сервером.");
             }
         });
-        //thread.setDaemon(true);
+        thread.setDaemon(true);
         thread.start();
     }
 
